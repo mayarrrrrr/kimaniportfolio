@@ -1,8 +1,9 @@
 import { useState } from "react"
 import { motion } from "framer-motion"
 import { Sun, Moon,X, Menu } from "lucide-react"
+import { Link } from "react-router-dom";
 
-const Navbar = ({ darkMode, toggleDarkMode }) => {
+const Navbar = ({ darkMode,token, toggleDarkMode }) => {
   const [activeSection, setActiveSection] = useState("home")
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
@@ -10,9 +11,15 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
     { name: "Home", link: "#home" },
     { name: "About", link: "#about" },
     { name: "Skills", link: "#skills" },
+    { name: "Experience", link: "#experience" },
     { name: "Projects", link: "#projects" },
     { name: "Contact", link: "#contact" },
   ]
+  {token && (
+  <Link to="/admin" className="text-orange-400">
+    Admin
+  </Link>
+)}
 
   const lightColors = {
     navBg: "bg-gradient-to-br from-orange-200 to-white",
@@ -84,6 +91,16 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
 
           {/* Actions */}
           <div className="flex items-center space-x-2">
+             {/* ADMIN LINK (ONLY IF LOGGED IN) */}
+  {/* {token && (
+    <Link
+      to="/admin"
+      className="hidden lg:block text-orange-400 font-semibold"
+    >
+      Admin
+    </Link>
+  )} */}
+
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}

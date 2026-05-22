@@ -7,10 +7,18 @@ import About from "./components/About";
 import Skills from "./components/Skills"
 import Projects from "./components/Projects"
 import Contact from './components/Contact'
+import Experience from "./components/Experience";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+import Login from "./components/Login";
+import AdminDashboard from "./components/AdminDashboard";
+import ProtectedRoute from "./components/ProtectedRoute";
+import { Home } from "lucide-react";
 
 
 const App=()=>{
   const [darkMode, setDarkMode] = useState(true)
+  const [token, setToken] = useState(localStorage.getItem("token"));
 
   useEffect(()=>{
     AOS.init({
@@ -36,12 +44,15 @@ const App=()=>{
     <div className={
       darkMode ? 'bg-linear-to-br from-gray-900 via-[#0d182e] to-gray-900 min-h-screen' : 'bg-linear-to-br from-gray-50 to-blue-50 min-h-screen'
     }>
-      <Navbar darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
+      <Navbar darkMode={darkMode} token={token} toggleDarkMode={toggleDarkMode} />
       <Hero darkMode={darkMode}/>
       <About darkMode={darkMode}/>
       <Skills darkMode={darkMode}/>
+      <Experience darkMode={darkMode}/>
       <Projects darkMode={darkMode}/>
+
       <Contact darkMode={darkMode} />
+      
       
   </div>
   )
