@@ -328,7 +328,7 @@ const Hero = () => {
             </button>
           </a>
 
-          <button
+          {/* <button
             className={`
               group flex items-center gap-3
               uppercase tracking-[0.2em]
@@ -344,7 +344,7 @@ const Hero = () => {
               size={18}
               className="group-hover:translate-x-2 transition"
             />
-          </button>
+          </button> */}
         </motion.div>
       </div>
 

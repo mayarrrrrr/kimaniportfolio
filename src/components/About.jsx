@@ -168,6 +168,7 @@ const About = ({ darkMode }) => {
           </motion.div>
 
           {/* CTA */}
+          <a href='https://www.linkedin.com/in/kelvin-kimani-5b8623190/'>
           <motion.button
             variants={fadeUp}
             className="mt-8 px-8 py-4 rounded-full text-white uppercase tracking-widest flex items-center gap-3"
@@ -176,6 +177,7 @@ const About = ({ darkMode }) => {
             Explore Journey
             <ArrowRight size={16} />
           </motion.button>
+          </a>
         </motion.article>
       </div>
     </section>
