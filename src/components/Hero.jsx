@@ -135,7 +135,7 @@ const Hero = () => {
 
           <div className="mt-5 flex items-center gap-3 text-orange-400 tracking-[0.3em] uppercase text-xs">
             <div className="w-12 h-[1px] bg-orange-400"></div>
-            Kelvin Kimani — Audio Visual Technician
+            Kelvin Kimani — Storyteller
           </div>
         </motion.div>
 
@@ -180,10 +180,11 @@ const Hero = () => {
               </div>
 
               <div className="space-y-2 text-xs uppercase tracking-[0.2em] text-white/70">
-                <p>Photography</p>
-                <p>Film Direction</p>
+                <p>Film Making</p>
+                <p>Cinematogaphy</p>
+                <p>Video Editing</p>
                 <p>Sound Design</p>
-                <p>Live Sessions</p>
+                <p>Photography</p>
               </div>
             </div>
           </motion.div>
@@ -328,23 +329,7 @@ const Hero = () => {
             </button>
           </a>
 
-          {/* <button
-            className={`
-              group flex items-center gap-3
-              uppercase tracking-[0.2em]
-              text-sm transition-all
-              ${theme.secondary}
-            `}
-            id="#projects"
-            href="#projects"
-          >
-            Explore Projects
-
-            <ArrowRight
-              size={18}
-              className="group-hover:translate-x-2 transition"
-            />
-          </button> */}
+          {/*   */}
         </motion.div>
       </div>
 

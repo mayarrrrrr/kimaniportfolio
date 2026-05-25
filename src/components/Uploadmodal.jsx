@@ -1,18 +1,25 @@
-
-
 import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
-  X,Star, Upload, Image, Film, Loader2, Link, FileUp,
+  X, Star, Upload, Image, Film, Loader2, Link, FileUp,
+  Heart, Bird, Home, Calendar,
 } from 'lucide-react';
 
 const ease = [0.22, 1, 0.36, 1];
 
+/* ── Folder definitions (keep in sync with Projects.jsx) ─────────── */
+export const Folders = [
+  { key: 'humanitarian', label: 'Humanitarian', icon: Heart,    color: '#ef4444' },
+  { key: 'wildlife',     label: 'Wildlife',     icon: Bird,     color: '#22c55e' },
+  { key: 'real estate',  label: 'Real Estate',  icon: Home,     color: '#3b82f6' },
+  { key: 'events',       label: 'Events',       icon: Calendar, color: '#a855f7' },
+];
+
 /* ── URL helpers ─────────────────────────────────────────────────── */
 const detectSource = (url) => {
-  if (/youtube\.com|youtu\.be/.test(url))    return 'youtube';
-  if (/vimeo\.com/.test(url))                return 'vimeo';
-  if (/flickr\.com|staticflickr/.test(url))  return 'flickr';
+  if (/youtube\.com|youtu\.be/.test(url))   return 'youtube';
+  if (/vimeo\.com/.test(url))               return 'vimeo';
+  if (/flickr\.com|staticflickr/.test(url)) return 'flickr';
   return 'direct';
 };
 
@@ -25,42 +32,44 @@ const toEmbedUrl = (url, source) => {
     const id = url.match(/vimeo\.com\/(\d+)/)?.[1];
     return id ? `https://player.vimeo.com/video/${id}` : url;
   }
-  return url; // flickr / direct — use as-is
+  return url;
 };
 
 const SOURCE_LABELS = {
-  youtube : 'YouTube',
-  vimeo   : 'Vimeo',
-  flickr  : 'Flickr',
-  direct  : 'Direct URL',
+  youtube: 'YouTube',
+  vimeo:   'Vimeo',
+  flickr:  'Flickr',
+  direct:  'Direct URL',
 };
 
 /* ── Component ───────────────────────────────────────────────────── */
-const UploadModal = ({ onClose, onCreate, dark }) => {
+const UploadModal = ({ onClose, onCreate, dark, defaultFolder = null }) => {
   const fileRef  = useRef(null);
   const thumbRef = useRef(null);
 
-  /* ── type & input mode ── */
+  /* type & input mode */
   const [type,      setType]      = useState('photo');
-  const [inputMode, setInputMode] = useState('file');   // 'file' | 'url'
+  const [inputMode, setInputMode] = useState('file');
 
-  /* ── file upload state ── */
+  /* file upload state */
   const [file,      setFile]      = useState(null);
   const [thumb,     setThumb]     = useState(null);
   const [preview,   setPreview]   = useState(null);
   const [thumbPrev, setThumbPrev] = useState(null);
 
-  /* ── url state ── */
-  const [urlValue,     setUrlValue]     = useState('');
-  const [videoSource,  setVideoSource]  = useState('youtube');
+  /* url state */
+  const [urlValue,    setUrlValue]    = useState('');
+  const [videoSource, setVideoSource] = useState('youtube');
 
-  /* ── meta fields ── */
+  /* meta fields */
   const [title,    setTitle]    = useState('');
   const [desc,     setDesc]     = useState('');
-  const [tags,     setTags]     = useState('');
   const [featured, setFeatured] = useState(false);
 
-  /* ── upload state ── */
+  /* ★ folder selection — required */
+  const [folder, setFolder] = useState(defaultFolder ?? '');
+
+  /* upload state */
   const [progress,  setProgress]  = useState(0);
   const [uploading, setUploading] = useState(false);
   const [error,     setError]     = useState('');
@@ -78,14 +87,14 @@ const UploadModal = ({ onClose, onCreate, dark }) => {
     setUrlValue(''); setError('');
   }, [inputMode, type]);
 
-  /* ── theme tokens ── */
-  const bg       = dark ? '#111'                         : '#fff';
-  const text     = dark ? '#fff'                         : '#111';
-  const muted    = dark ? 'rgba(255,255,255,0.4)'        : 'rgba(0,0,0,0.4)';
-  const border   = dark ? 'rgba(255,255,255,0.08)'       : 'rgba(0,0,0,0.1)';
-  const inputBg  = dark ? 'rgba(255,255,255,0.05)'       : 'rgba(0,0,0,0.04)';
+  /* theme tokens */
+  const bg      = dark ? '#111'                   : '#fff';
+  const text    = dark ? '#fff'                   : '#111';
+  const muted   = dark ? 'rgba(255,255,255,0.4)'  : 'rgba(0,0,0,0.4)';
+  const border  = dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)';
+  const inputBg = dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)';
 
-  /* ── handlers ── */
+  /* handlers */
   const handleFile = (e) => {
     const f = e.target.files[0];
     if (!f) return;
@@ -115,15 +124,13 @@ const UploadModal = ({ onClose, onCreate, dark }) => {
   };
 
   const handleSubmit = async () => {
-    if (!title.trim()) { setError('Title is required'); return; }
-
-    /* URL mode validation */
+    /* Validation */
+    if (!title.trim())  { setError('Title is required');             return; }
+    if (!folder)        { setError('Please select a folder/category'); return; }
     if (inputMode === 'url') {
       if (!urlValue.trim()) { setError('Please paste a URL'); return; }
       try { new URL(urlValue); } catch { setError('Invalid URL'); return; }
     }
-
-    /* File mode validation */
     if (inputMode === 'file' && !file) {
       setError('Please select a file'); return;
     }
@@ -137,20 +144,19 @@ const UploadModal = ({ onClose, onCreate, dark }) => {
         description: desc.trim(),
         type,
         featured,
-        tags: tags.split(',').map(t => t.trim()).filter(Boolean),
-        /* URL-specific fields — only set in url mode */
+        /* folder becomes the single tag so filtering works */
+        tags: [folder],
         ...(inputMode === 'url' && {
           url:         urlValue.trim(),
           videoSource: src,
           embedUrl:    toEmbedUrl(urlValue.trim(), src),
-          // Photos from Flickr: treat direct image URL as the display URL
         }),
       };
 
       await onCreate(
         meta,
-        inputMode === 'file' ? file      : null,
-        inputMode === 'file' ? thumb     : null,
+        inputMode === 'file' ? file  : null,
+        inputMode === 'file' ? thumb : null,
         (pct) => setProgress(pct),
       );
 
@@ -163,24 +169,22 @@ const UploadModal = ({ onClose, onCreate, dark }) => {
     }
   };
 
-  /* ── derived ── */
+  /* derived */
   const detectedLabel = urlValue ? SOURCE_LABELS[detectSource(urlValue)] : null;
-
-  /* YouTube / Vimeo embed preview for URL mode */
   const embedPreviewUrl = (() => {
     if (!urlValue || inputMode !== 'url') return null;
     const src = detectSource(urlValue);
     if (src === 'youtube' || src === 'vimeo') return toEmbedUrl(urlValue, src);
     return null;
   })();
-
-  /* Flickr / direct image preview */
   const directImgPreview = (() => {
     if (!urlValue || inputMode !== 'url') return null;
     const src = detectSource(urlValue);
     if (src === 'flickr' || src === 'direct') return urlValue;
     return null;
   })();
+
+  const selectedFolder = Folders.find(f => f.key === folder);
 
   return (
     <motion.div
@@ -197,7 +201,7 @@ const UploadModal = ({ onClose, onCreate, dark }) => {
         className="relative w-full max-w-xl rounded-[2rem] overflow-hidden"
         style={{ background: bg, border: `1px solid ${border}`, boxShadow: '0 40px 100px rgba(0,0,0,0.5)' }}
       >
-        {/* ── Header ── */}
+        {/* Header */}
         <div className="flex items-center justify-between px-8 pt-8 pb-6"
           style={{ borderBottom: `1px solid ${border}` }}>
           <div>
@@ -213,10 +217,10 @@ const UploadModal = ({ onClose, onCreate, dark }) => {
           </button>
         </div>
 
-        {/* ── Body ── */}
+        {/* Body */}
         <div className="px-8 py-6 space-y-5 max-h-[70vh] overflow-y-auto">
 
-          {/* Type toggle: Photo / Video */}
+          {/* Type toggle */}
           <div className="flex gap-2">
             {['photo', 'video'].map(t => (
               <button key={t} onClick={() => setType(t)}
@@ -232,7 +236,7 @@ const UploadModal = ({ onClose, onCreate, dark }) => {
             ))}
           </div>
 
-          {/* Input mode toggle: File / URL */}
+          {/* Input mode toggle */}
           <div className="flex gap-2">
             {[
               { key: 'file', icon: FileUp, label: 'File Upload' },
@@ -251,10 +255,9 @@ const UploadModal = ({ onClose, onCreate, dark }) => {
             ))}
           </div>
 
-          {/* ── FILE MODE ── */}
+          {/* FILE MODE */}
           {inputMode === 'file' && (
             <>
-              {/* Main file drop zone */}
               <div
                 onClick={() => fileRef.current.click()}
                 className="relative cursor-pointer rounded-2xl overflow-hidden flex items-center justify-center"
@@ -277,7 +280,6 @@ const UploadModal = ({ onClose, onCreate, dark }) => {
                   onChange={handleFile} className="hidden" />
               </div>
 
-              {/* Video thumbnail picker */}
               {type === 'video' && (
                 <div>
                   <p className="text-[10px] uppercase tracking-[0.3em] mb-2" style={{ color: muted }}>
@@ -301,10 +303,9 @@ const UploadModal = ({ onClose, onCreate, dark }) => {
             </>
           )}
 
-          {/* ── URL MODE ── */}
+          {/* URL MODE */}
           {inputMode === 'url' && (
             <div className="space-y-3">
-              {/* URL input */}
               <div className="relative">
                 <input
                   type="url"
@@ -326,7 +327,6 @@ const UploadModal = ({ onClose, onCreate, dark }) => {
                 )}
               </div>
 
-              {/* Helper chips */}
               <div className="flex gap-2 flex-wrap">
                 {(type === 'video'
                   ? ['https://youtube.com/watch?v=…', 'https://vimeo.com/…']
@@ -340,40 +340,33 @@ const UploadModal = ({ onClose, onCreate, dark }) => {
                 ))}
               </div>
 
-              {/* Live preview */}
               {embedPreviewUrl && (
                 <div className="rounded-2xl overflow-hidden" style={{ aspectRatio: '16/9', background: '#000' }}>
-                  <iframe
-                    src={embedPreviewUrl}
-                    title="preview"
-                    allow="autoplay; fullscreen"
-                    allowFullScreen
-                    style={{ width: '100%', height: '100%', border: 'none' }}
-                  />
+                  <iframe src={embedPreviewUrl} title="preview"
+                    allow="autoplay; fullscreen" allowFullScreen
+                    style={{ width: '100%', height: '100%', border: 'none' }} />
                 </div>
               )}
               {directImgPreview && (
                 <div className="rounded-2xl overflow-hidden flex items-center justify-center"
                   style={{ height: 180, background: inputBg, border: `1px solid ${border}` }}>
-                  <img
-                    src={directImgPreview}
-                    alt="URL preview"
+                  <img src={directImgPreview} alt="URL preview"
                     className="max-w-full max-h-full object-contain rounded-2xl"
-                    onError={e => { e.currentTarget.style.display = 'none'; }}
-                  />
+                    onError={e => { e.currentTarget.style.display = 'none'; }} />
                 </div>
               )}
             </div>
           )}
 
-          {/* ── Shared meta fields ── */}
+          {/* Title */}
           <input
             value={title} onChange={e => setTitle(e.target.value)}
             placeholder="Project title *"
             className="w-full px-5 py-3.5 rounded-xl text-sm outline-none"
-            style={{ background: inputBg, border: `1px solid ${border}`, color: text }}
+            style={{ background: inputBg, border: `1px solid ${title ? '#f97316' : border}`, color: text }}
           />
 
+          {/* Description */}
           <textarea
             rows={3} value={desc} onChange={e => setDesc(e.target.value)}
             placeholder="Short description"
@@ -381,14 +374,74 @@ const UploadModal = ({ onClose, onCreate, dark }) => {
             style={{ background: inputBg, border: `1px solid ${border}`, color: text }}
           />
 
-          <input
-            value={tags} onChange={e => setTags(e.target.value)}
-            placeholder="wedding, portrait, commercial"
-            className="w-full px-5 py-3.5 rounded-xl text-sm outline-none"
-            style={{ background: inputBg, border: `1px solid ${border}`, color: text }}
-          />
+          {/* ★ Folder selector — REQUIRED ── */}
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <p className="text-[10px] uppercase tracking-[0.3em]" style={{ color: muted }}>
+                Folder
+              </p>
+              <span className="text-[9px] px-2 py-0.5 rounded-full uppercase tracking-widest"
+                style={{ background: 'rgba(249,115,22,0.15)', color: '#f97316' }}>
+                Required
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {Folders.map(f => {
+                const Icon      = f.icon;
+                const selected  = folder === f.key;
+                return (
+                  <button
+                    key={f.key}
+                    onClick={() => { setFolder(f.key); setError(''); }}
+                    className="flex items-center gap-3 px-4 py-3 rounded-2xl text-left transition-all"
+                    style={{
+                      background : selected ? `${f.color}18` : inputBg,
+                      border     : `1.5px solid ${selected ? f.color : border}`,
+                      boxShadow  : selected ? `0 0 0 1px ${f.color}30` : 'none',
+                    }}
+                  >
+                    <div className="w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0"
+                      style={{
+                        background: selected ? `${f.color}22` : 'transparent',
+                        border    : `1px solid ${selected ? f.color : border}`,
+                      }}>
+                      <Icon size={14} style={{ color: selected ? f.color : muted }} />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide leading-tight"
+                        style={{ color: selected ? f.color : text }}>
+                        {f.label}
+                      </p>
+                    </div>
+                    {selected && (
+                      <motion.div
+                        initial={{ scale: 0 }} animate={{ scale: 1 }}
+                        className="ml-auto w-2 h-2 rounded-full flex-shrink-0"
+                        style={{ background: f.color }}
+                      />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Selected folder confirmation pill */}
+            {selectedFolder && (
+              <motion.div
+                initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
+                className="mt-2.5 flex items-center gap-2 px-3 py-1.5 rounded-full"
+                style={{ background: `${selectedFolder.color}12`, border: `1px solid ${selectedFolder.color}30`, width: 'fit-content' }}
+              >
+                <selectedFolder.icon size={11} style={{ color: selectedFolder.color }} />
+                <p className="text-[10px] uppercase tracking-widest" style={{ color: selectedFolder.color }}>
+                  Will appear in {selectedFolder.label}
+                </p>
+              </motion.div>
+            )}
+          </div>
+
           {/* Featured toggle */}
-<label className="flex items-center gap-3 cursor-pointer select-none">
+          <label className="flex items-center gap-3 cursor-pointer select-none">
             <div onClick={() => setFeatured(!featured)}
               className="w-10 h-6 rounded-full transition-all duration-300 flex items-center px-1"
               style={{ background: featured ? '#f97316' : inputBg, border: `1px solid ${featured ? '#f97316' : border}` }}>
@@ -406,10 +459,17 @@ const UploadModal = ({ onClose, onCreate, dark }) => {
             </div>
           </label>
 
-          {/* ── Error ── */}
-          {error && <p className="text-red-400 text-xs">{error}</p>}
+          {/* Error */}
+          {error && (
+            <motion.p
+              initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
+              className="text-red-400 text-xs"
+            >
+              {error}
+            </motion.p>
+          )}
 
-          {/* ── Progress bar ── */}
+          {/* Progress bar */}
           {uploading && (
             <div>
               <div className="flex justify-between text-[10px] mb-2" style={{ color: muted }}>
@@ -427,7 +487,7 @@ const UploadModal = ({ onClose, onCreate, dark }) => {
           )}
         </div>
 
-        {/* ── Footer ── */}
+        {/* Footer */}
         <div className="px-8 pb-8 pt-5 flex gap-3" style={{ borderTop: `1px solid ${border}` }}>
           <button onClick={onClose} disabled={uploading}
             className="flex-1 py-3.5 rounded-2xl text-xs uppercase tracking-widest font-semibold transition-all"

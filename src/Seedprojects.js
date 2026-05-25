@@ -98,7 +98,7 @@ const externalVideos = [
     videoId      : 'REPLACE_WITH_YOUTUBE_VIDEO_ID',  // just the ID, e.g. 'dQw4w9WgXcQ'
     embedUrl     : 'https://www.youtube.com/embed/REPLACE_WITH_YOUTUBE_VIDEO_ID',
     thumbnailUrl : 'https://img.youtube.com/vi/REPLACE_WITH_YOUTUBE_VIDEO_ID/maxresdefault.jpg',
-    tags         : ['wedding', 'highlight', 'cinematic'],
+    tags         : ['humanitarian', 'wildlife', 'real estate','events'],
     featured     : true,
   },
   {

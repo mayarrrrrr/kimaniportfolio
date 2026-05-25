@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Pencil, Trash2, X,
   Image, Film, Star, Play,
-  Loader2, AlertCircle,
+  Loader2, AlertCircle, FolderOpen, ChevronLeft,
+  Heart, Bird, Home, Calendar,
 } from 'lucide-react';
 
 import { useProjects }       from './useProjects';
@@ -11,8 +12,7 @@ import UploadModal           from './Uploadmodal';
 import EditModal             from './Editmodal';
 import ProgressiveImage      from './Progressiveimage';
 import { gridThumb, blurPlaceholder, lightboxSrc } from './Mediautils';
-// import { getYouTubeId }      from './Youtube';
-import { extractVideoThumbnail } from './VideoThumbnail'; // ← new
+import { extractVideoThumbnail } from './VideoThumbnail';
 import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
 import { auth, provider } from '../firebase';
 
@@ -27,6 +27,239 @@ const fadeUp = {
 };
 const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.07 } } };
 
+/* ─── Folder definitions ────────────────────────────────────────── */
+export const FOLDERS = [
+  {
+    key   : 'humanitarian',
+    label : 'Humanitarian',
+    icon  : Heart,
+    color : '#ef4444',
+    glow  : 'rgba(239,68,68,0.25)',
+    desc  : 'Stories of people & communities',
+  },
+  {
+    key   : 'wildlife',
+    label : 'Wildlife',
+    icon  : Bird,
+    color : '#22c55e',
+    glow  : 'rgba(34,197,94,0.25)',
+    desc  : 'Nature & wildlife photography',
+  },
+  {
+    key   : 'real estate',
+    label : 'Real Estate',
+    icon  : Home,
+    color : '#3b82f6',
+    glow  : 'rgba(59,130,246,0.25)',
+    desc  : 'Architecture & property',
+  },
+  {
+    key   : 'events',
+    label : 'Events',
+    icon  : Calendar,
+    color : '#a855f7',
+    glow  : 'rgba(168,85,247,0.25)',
+    desc  : 'Weddings, concerts & celebrations',
+  },
+];
+
+/* ─── Folder row — cinematic ────────────────────────────────────── */
+const FolderRow = ({ folder, projects, dark, onClick, index }) => {
+  const [hovering, setHovering] = useState(false);
+  const Icon = folder.icon;
+
+  const count = projects.filter(p =>
+    p.tags?.some(t => t.toLowerCase() === folder.key)
+  ).length;
+
+  // up to 4 sample thumbs
+  const samples = projects
+    .filter(p =>
+      p.tags?.some(t => t.toLowerCase() === folder.key) &&
+      (p.cloudinaryId || p.thumbnailUrl || p.url)
+    )
+    .slice(0, 4)
+    .map(p => p.cloudinaryId ? gridThumb(p.cloudinaryId) : p.thumbnailUrl ?? p.url);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -60 }}
+      whileInView={{ opacity: 1, x: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: index * 0.12, duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+      onClick={onClick}
+      onMouseEnter={() => setHovering(true)}
+      onMouseLeave={() => setHovering(false)}
+      className="relative overflow-hidden cursor-pointer"
+      style={{
+        borderTop: `1px solid ${hovering
+          ? folder.color + '40'
+          : dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'}`,
+        transition: 'border-color 0.5s ease',
+      }}
+    >
+      {/* Expanding color wash on hover */}
+      <motion.div
+        animate={{ scaleX: hovering ? 1 : 0, opacity: hovering ? 1 : 0 }}
+        initial={{ scaleX: 0, opacity: 0 }}
+        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        style={{
+          position: 'absolute', inset: 0,
+          background: `linear-gradient(90deg, ${folder.color}12 0%, transparent 70%)`,
+          transformOrigin: 'left',
+        }}
+      />
+
+      {/* Left accent line that grows on hover */}
+      <motion.div
+        animate={{ scaleY: hovering ? 1 : 0, opacity: hovering ? 1 : 0 }}
+        initial={{ scaleY: 0, opacity: 0 }}
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        style={{
+          position: 'absolute', left: 0, top: 0, bottom: 0, width: 2,
+          background: folder.color,
+          transformOrigin: 'top',
+        }}
+      />
+
+      <div className="relative flex items-center justify-between px-8 py-7">
+
+        {/* ── Left block: index + icon + label ── */}
+        <div className="flex items-center gap-7">
+
+          {/* Scene number */}
+          <span
+            className="text-[11px] font-light tabular-nums w-6 text-right flex-shrink-0"
+            style={{
+              color: hovering ? folder.color : dark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.18)',
+              fontFamily: 'Georgia, serif',
+              transition: 'color 0.4s ease',
+            }}
+          >
+            {String(index + 1).padStart(2, '0')}
+          </span>
+
+          {/* Icon */}
+          <motion.div
+            animate={{
+              rotate: hovering ? 8 : 0,
+              scale : hovering ? 1.15 : 1,
+            }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            className="flex-shrink-0"
+          >
+            <Icon
+              size={22}
+              style={{
+                color: hovering ? folder.color : dark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.3)',
+                transition: 'color 0.4s ease',
+              }}
+            />
+          </motion.div>
+
+          {/* Label block */}
+          <div>
+            <motion.p
+              animate={{ x: hovering ? 4 : 0 }}
+              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+              className="text-2xl font-black uppercase tracking-tight leading-none"
+              style={{
+                color     : dark ? '#fff' : '#111',
+                fontFamily: 'Georgia, serif',
+                letterSpacing: '-0.01em',
+              }}
+            >
+              {folder.label}
+            </motion.p>
+            <motion.p
+              animate={{ opacity: hovering ? 1 : 0, y: hovering ? 0 : 4 }}
+              transition={{ duration: 0.35, ease: 'easeOut' }}
+              className="text-[11px] uppercase tracking-[0.35em] mt-1"
+              style={{ color: folder.color }}
+            >
+              {folder.desc}
+            </motion.p>
+          </div>
+        </div>
+
+        {/* ── Right block: count + thumbnails + arrow ── */}
+        <div className="flex items-center gap-6 flex-shrink-0">
+
+          {/* Count */}
+          <div className="text-right hidden sm:block">
+            <p
+              className="text-3xl font-black leading-none"
+              style={{
+                color     : hovering ? folder.color : dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)',
+                fontFamily: 'Georgia, serif',
+                transition: 'color 0.4s ease',
+              }}
+            >
+              {String(count).padStart(2, '0')}
+            </p>
+            <p
+              className="text-[9px] uppercase tracking-[0.4em] mt-0.5"
+              style={{ color: dark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.25)' }}
+            >
+              files
+            </p>
+          </div>
+
+          {/* Thumbnail filmstrip */}
+          {/* {samples.length > 0 && (
+            <div className="flex gap-1.5 items-center">
+              {samples.map((src, i) => (
+                <motion.div
+                  key={i}
+                  animate={{
+                    opacity  : hovering ? 1 : 0.25,
+                    y        : hovering ? 0 : 6,
+                    scale    : hovering ? 1 : 0.92,
+                  }}
+                  transition={{
+                    duration: 0.45,
+                    delay   : hovering ? i * 0.06 : (samples.length - i) * 0.04,
+                    ease    : [0.22, 1, 0.36, 1],
+                  }}
+                  className="rounded-lg overflow-hidden flex-shrink-0"
+                  style={{
+                    width : 42,
+                    height: 42,
+                    outline: `1px solid ${folder.color}30`,
+                  }}
+                >
+                   <img src={src} alt="" className="w-full h-full object-cover" /> 
+                </motion.div>
+              ))}
+            </div>
+          )} */}
+
+          {/* Arrow */}
+          <motion.div
+            animate={{
+              x      : hovering ? 0  : -8,
+              opacity: hovering ? 1  : 0,
+              rotate : hovering ? 0  : -15,
+            }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            className="text-2xl leading-none flex-shrink-0"
+            style={{ color: folder.color }}
+          >
+            →
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Bottom border */}
+      {index === 3 && (
+        <div style={{
+          borderBottom: `1px solid ${dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'}`,
+        }} />
+      )}
+    </motion.div>
+  );
+};
+
 /* ─── Status badge ──────────────────────────────────────────────── */
 const StatusBadge = ({ status }) => {
   if (status === 'ready' || !status) return null;
@@ -37,9 +270,6 @@ const StatusBadge = ({ status }) => {
         <div className="flex flex-col items-center gap-3">
           <Loader2 size={28} className="animate-spin text-orange-400" />
           <p className="text-[10px] uppercase tracking-[0.4em] text-white/60">Processing…</p>
-          <p className="text-[9px] text-white/30 text-center px-4">
-            Video uploaded — tap to play anyway
-          </p>
         </div>
       )}
       {status === 'error' && (
@@ -56,7 +286,6 @@ const StatusBadge = ({ status }) => {
 const ProjectCard = ({ project, canEdit, onEdit, onDelete, onPreview, dark }) => {
   const [hovering, setHovering]         = useState(false);
   const [confirming, setConfirming]     = useState(false);
-  // Auto-extracted thumbnail for direct (non-YouTube/Vimeo) videos
   const [autoThumb, setAutoThumb]       = useState(null);
   const [thumbLoading, setThumbLoading] = useState(false);
 
@@ -65,44 +294,34 @@ const ProjectCard = ({ project, canEdit, onEdit, onDelete, onPreview, dark }) =>
   const isVimeo   = !isPhoto && project.videoSource === 'vimeo';
   const isDirect  = !isPhoto && !isYT && !isVimeo;
 
-  // ── Thumbnail resolution priority ──────────────────────────────
-  //  Photo  : Cloudinary grid thumb → direct URL
-  //  YT/Vimeo: thumbnailUrl already set by the upload flow
-  //  Direct video:
-  //    1. thumbnailUrl stored in Firestore (manually uploaded)
-  //    2. autoThumb  extracted by canvas at mount
-  //    3. null → gradient placeholder with icon
   const ytThumb = isYT && project.embedUrl
-  ? `https://img.youtube.com/vi/${project.embedUrl.split('/').pop()}/maxresdefault.jpg`
-  : null;
+    ? `https://img.youtube.com/vi/${project.embedUrl.split('/').pop()}/maxresdefault.jpg`
+    : null;
 
-const thumbSrc = isPhoto
-  ? (project.cloudinaryId ? gridThumb(project.cloudinaryId) : project.url)
-  : (project.thumbnailUrl ?? ytThumb ?? autoThumb ?? null);
+  const thumbSrc = isPhoto
+    ? (project.cloudinaryId ? gridThumb(project.cloudinaryId) : project.url)
+    : (project.thumbnailUrl ?? ytThumb ?? autoThumb ?? null);
 
   const placeholder = isPhoto && project.cloudinaryId
     ? blurPlaceholder(project.cloudinaryId)
     : null;
 
-  // ── Auto-extract thumbnail for direct videos ────────────────────
   useEffect(() => {
-    // Only run for direct videos that have no stored thumbnailUrl yet
     if (!isDirect || project.thumbnailUrl || !project.url) return;
-
     let cancelled = false;
     setThumbLoading(true);
-
     extractVideoThumbnail(project.url, 1).then((dataUrl) => {
-      if (!cancelled) {
-        setAutoThumb(dataUrl);   // null is fine — falls through to placeholder
-        setThumbLoading(false);
-      }
+      if (!cancelled) { setAutoThumb(dataUrl); setThumbLoading(false); }
     });
-
     return () => { cancelled = true; };
   }, [isDirect, project.thumbnailUrl, project.url]);
 
   const canPreview = !!project.url || !!project.cloudinaryId;
+
+  // folder color accent
+  const folderDef = FOLDERS.find(f =>
+    project.tags?.some(t => t.toLowerCase() === f.key)
+  );
 
   return (
     <motion.div
@@ -133,8 +352,6 @@ const thumbSrc = isPhoto
           }}
         />
       ) : (
-        /* No thumbnail — gradient placeholder with icon.
-           Show a subtle pulse while we're still extracting. */
         <div
           className="absolute inset-0 flex flex-col items-center justify-center gap-2"
           style={{
@@ -175,7 +392,7 @@ const thumbSrc = isPhoto
         onClick={() => canPreview && onPreview(project)}
       />
 
-      {/* Processing overlay — still clickable */}
+      {/* Processing overlay */}
       {project.status === 'processing' && (
         <div
           className="absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-2xl"
@@ -218,7 +435,7 @@ const thumbSrc = isPhoto
         </span>
       </div>
 
-      {/* Play button overlay for ready / thumb-having videos */}
+      {/* Play button overlay for ready videos */}
       {!isPhoto && project.status !== 'processing' && (
         <motion.div
           animate={{ opacity: hovering ? 1 : 0, scale: hovering ? 1 : 0.85 }}
@@ -245,15 +462,14 @@ const thumbSrc = isPhoto
         {project.description && (
           <p className="text-white/55 text-xs mt-1 line-clamp-2">{project.description}</p>
         )}
-        {project.tags?.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-2">
-            {project.tags.slice(0, 3).map(tag => (
-              <span key={tag}
-                className="text-[9px] px-2 py-0.5 rounded-full uppercase tracking-widest"
-                style={{ background: 'rgba(249,115,22,0.28)', color: '#fdba74' }}>
-                {tag}
-              </span>
-            ))}
+        {/* Folder tag pill */}
+        {folderDef && (
+          <div className="flex gap-1 mt-2">
+            <span className="text-[9px] px-2 py-0.5 rounded-full uppercase tracking-widest flex items-center gap-1"
+              style={{ background: `${folderDef.color}30`, color: folderDef.color }}>
+              <folderDef.icon size={8} />
+              {folderDef.label}
+            </span>
           </div>
         )}
       </motion.div>
@@ -272,7 +488,6 @@ const thumbSrc = isPhoto
           >
             <Pencil size={13} className="text-white" />
           </button>
-
           <button
             onClick={e => {
               e.stopPropagation();
@@ -318,11 +533,9 @@ const Lightbox = ({ project, onClose }) => {
       style={{ background: 'rgba(0,0,0,0.96)', backdropFilter: 'blur(24px)' }}
       onClick={onClose}
     >
-      <button
-        onClick={onClose}
+      <button onClick={onClose}
         className="absolute top-6 right-6 w-10 h-10 rounded-full flex items-center justify-center z-10 transition-all"
-        style={{ background: 'rgba(255,255,255,0.12)' }}
-      >
+        style={{ background: 'rgba(255,255,255,0.12)' }}>
         <X size={18} className="text-white" />
       </button>
 
@@ -345,7 +558,6 @@ const Lightbox = ({ project, onClose }) => {
             <p className="text-white/40 text-sm uppercase tracking-widest">Image unavailable</p>
           </div>
         )}
-
         {isVideo && videoSrc && (
           <video src={videoSrc} controls autoPlay playsInline
             className="w-full rounded-2xl"
@@ -353,7 +565,6 @@ const Lightbox = ({ project, onClose }) => {
             Your browser does not support the video tag.
           </video>
         )}
-
         {isYT && project.embedUrl && (
           <div style={{ position: 'relative', paddingTop: '56.25%' }}>
             <iframe src={`${project.embedUrl}?autoplay=1&rel=0&modestbranding=1`}
@@ -363,7 +574,6 @@ const Lightbox = ({ project, onClose }) => {
               style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none', borderRadius: '1rem' }} />
           </div>
         )}
-
         {isVimeo && project.embedUrl && (
           <div style={{ position: 'relative', paddingTop: '56.25%' }}>
             <iframe src={`${project.embedUrl}?autoplay=1&title=0&byline=0&portrait=0`}
@@ -373,7 +583,6 @@ const Lightbox = ({ project, onClose }) => {
               style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none', borderRadius: '1rem' }} />
           </div>
         )}
-
         {!imgSrc && !videoSrc && !project.embedUrl && (
           <div className="flex items-center justify-center py-20 rounded-2xl" style={{ background: '#111' }}>
             <p className="text-white/40 text-sm uppercase tracking-widest">Media unavailable</p>
@@ -416,25 +625,22 @@ const Projects = ({ darkMode }) => {
   const text  = dark ? '#ffffff' : '#111111';
   const muted = dark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)';
 
-  
+  const [canEdit, setCanEdit] = useState(false);
 
-const [canEdit, setCanEdit] = useState(false);
-
-useEffect(() => {
-  const unsub = onAuthStateChanged(auth, (user) => {
-    const email = user?.email?.toLowerCase().trim();
-
-    const isAdmin =
-      email === "kelvkim.mwangi@gmail.com" ||
-      email === "akokmayar607@gmail.com";
-
-    setCanEdit(isAdmin);
-  });
-
-  return unsub;
-}, []);
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (user) => {
+      const email = user?.email?.toLowerCase().trim();
+      const isAdmin =
+        email === "kelvkim.mwangi@gmail.com" ||
+        email === "akokmayar607@gmail.com";
+      setCanEdit(isAdmin);
+    });
+    return unsub;
+  }, []);
 
   const [tab, setTab]               = useState('photo');
+  // activeFolder = folder key string, or null (showing folder grid)
+  const [activeFolder, setActiveFolder] = useState(null);
   const [showUpload, setShowUpload] = useState(false);
   const [editing, setEditing]       = useState(null);
   const [preview, setPreview]       = useState(null);
@@ -443,6 +649,16 @@ useEffect(() => {
     projects, loading, loadingMore, hasMore, error,
     loadMore, createPhoto, createVideo, updateProject, deleteProject,
   } = useProjects(tab);
+
+  // When tab changes, reset active folder
+  useEffect(() => { setActiveFolder(null); }, [tab]);
+
+  // Projects filtered by active folder
+  const visibleProjects = activeFolder
+    ? projects.filter(p => p.tags?.some(t => t.toLowerCase() === activeFolder))
+    : projects;
+
+  const activeFolderDef = FOLDERS.find(f => f.key === activeFolder);
 
   const handleCreate = useCallback(async (meta, file, thumbFile, onProgress) => {
     if (meta.type === 'photo') {
@@ -518,29 +734,29 @@ useEffect(() => {
               </span>
             </motion.h1>
 
-            {/*  admin*/}
-{canEdit ? (
-  <motion.button
-  key="upload-btn"
-  onClick={() => setShowUpload(true)}
-  className="relative z-50 flex bg-orange-400 items-center gap-2 px-5 py-3 mr-0 rounded-full text-xs uppercase tracking-widest font-semibold"
->
-  Upload 
-</motion.button>
-) : null}
+            <div className="flex items-center gap-3">
+              {canEdit && (
+                <motion.button
+                  key="upload-btn"
+                  onClick={() => setShowUpload(true)}
+                  className="relative z-50 flex bg-orange-400 items-center gap-2 px-5 py-3 rounded-full text-xs uppercase tracking-widest font-semibold text-white"
+                >
+                  <Plus size={14} /> Upload
+                </motion.button>
+              )}
 
-{/* Sign in / out — always visible, small and unobtrusive */}
-<motion.button variants={fadeUp} custom={3}
-  whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
-  onClick={() => canEdit ? signOut(auth) : signInWithPopup(auth, provider)}
-  className="flex items-center gap-2 px-5 py-3 rounded-full text-xs uppercase tracking-widest font-semibold transition-all"
-  style={{
-    background: canEdit ? 'rgba(239,68,68,0.15)' : dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)',
-    color: canEdit ? '#f87171' : muted,
-    border: `1px solid ${canEdit ? 'rgba(239,68,68,0.3)' : dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
-  }}>
-  {canEdit ? 'Sign out' : 'Admin'}
-</motion.button>
+              <motion.button variants={fadeUp} custom={3}
+                whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
+                onClick={() => canEdit ? signOut(auth) : signInWithPopup(auth, provider)}
+                className="flex items-center gap-2 px-5 py-3 rounded-full text-xs uppercase tracking-widest font-semibold transition-all"
+                style={{
+                  background: canEdit ? 'rgba(239,68,68,0.15)' : dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)',
+                  color: canEdit ? '#f87171' : muted,
+                  border: `1px solid ${canEdit ? 'rgba(239,68,68,0.3)' : dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+                }}>
+                {canEdit ? 'Sign out' : 'Admin'}
+              </motion.button>
+            </div>
           </div>
         </motion.div>
 
@@ -566,7 +782,47 @@ useEffect(() => {
           ))}
         </motion.div>
 
-        {/* Grid */}
+        {/* ── Folder breadcrumb ── */}
+        <AnimatePresence mode="wait">
+          {activeFolder && (
+            <motion.div
+              key="breadcrumb"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.35 }}
+              className="flex items-center gap-3 mb-8"
+            >
+              <button
+                onClick={() => setActiveFolder(null)}
+                className="flex items-center gap-2 px-4 py-2 rounded-full text-xs uppercase tracking-widest font-semibold transition-all"
+                style={{
+                  background: dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
+                  color: muted,
+                  border: `1px solid ${dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+                }}
+              >
+                <ChevronLeft size={13} />
+                All Folders
+              </button>
+              <div className="h-[1px] w-6" style={{ background: activeFolderDef?.color || '#f97316' }} />
+              <div className="flex items-center gap-2 px-4 py-2 rounded-full text-xs uppercase tracking-widest font-semibold"
+                style={{
+                  background: `${activeFolderDef?.color || '#f97316'}18`,
+                  color: activeFolderDef?.color || '#f97316',
+                  border: `1px solid ${activeFolderDef?.color || '#f97316'}40`,
+                }}>
+                {activeFolderDef && <activeFolderDef.icon size={12} />}
+                {activeFolderDef?.label}
+              </div>
+              <span className="text-[10px] uppercase tracking-widest" style={{ color: muted }}>
+                {visibleProjects.length} {visibleProjects.length === 1 ? 'item' : 'items'}
+              </span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* ── Main content area ── */}
         {loading ? (
           <div className="flex items-center justify-center py-40">
             <Loader2 size={30} className="animate-spin text-orange-400" />
@@ -577,54 +833,84 @@ useEffect(() => {
             <p className="text-sm uppercase tracking-widest" style={{ color:muted }}>
               Failed to load — check Firestore rules
             </p>
-            <p className="text-xs text-center max-w-sm" style={{ color:muted }}>
-              Make sure Firestore rules allow read: if true; during testing
-            </p>
           </div>
-        ) : projects.length === 0 ? (
-          <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }}
-            className="flex flex-col items-center justify-center py-40 gap-5">
-            {tab==='photo'
-              ? <Image size={44} style={{ color:dark?'rgba(255,255,255,0.08)':'rgba(0,0,0,0.1)' }} />
-              : <Film  size={44} style={{ color:dark?'rgba(255,255,255,0.08)':'rgba(0,0,0,0.1)' }} />
-            }
-            <p className="text-sm uppercase tracking-[0.4em]" style={{ color:muted }}>
-              No {tab}s yet
-            </p>
-            <button onClick={() => setShowUpload(true)}
-              className="mt-2 px-6 py-3 rounded-full text-white text-xs uppercase tracking-widest"
-              style={{ background:'#f97316' }}>
-              Upload First {tab==='photo'?'Photo':'Video'}
-            </button>
-          </motion.div>
         ) : (
-          <>
-            <motion.div
-              key={tab}
-              variants={stagger} initial="hidden" animate="visible"
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
-            >
-              <AnimatePresence>
-                {projects
-  .filter((p) => p.featured)
-  .map((p) => (
-                  <ProjectCard key={p.id} project={p}
-                    canEdit={canEdit} dark={dark}
-                    onEdit={setEditing}
-                    onDelete={handleDelete}
-                    onPreview={setPreview}
-                  />
-                ))}
-              </AnimatePresence>
-            </motion.div>
+          <AnimatePresence mode="wait">
+            {/* ── FOLDER GRID VIEW ── */}
+            {!activeFolder ? (
+              <motion.div
+                key="folders"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.35 }}
+              >
+                <div className="w-full">
+                  {FOLDERS.map((folder, i) => (
+                    <FolderRow
+                      key={folder.key}
+                      folder={folder}
+                      projects={projects}
+                      dark={dark}
+                      index={i}
+                      onClick={() => setActiveFolder(folder.key)}
+                    />
+                  ))}
+                </div>
+              </motion.div>
+            ) : (
+              /* ── FOLDER CONTENTS VIEW ── */
+              <motion.div
+                key={`folder-${activeFolder}`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.35 }}
+              >
+                {visibleProjects.length === 0 ? (
+                  <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }}
+                    className="flex flex-col items-center justify-center py-40 gap-5">
+                    <FolderOpen size={44} style={{ color: activeFolderDef?.color || 'rgba(255,255,255,0.08)' }} />
+                    <p className="text-sm uppercase tracking-[0.4em]" style={{ color:muted }}>
+                      No {tab}s in {activeFolderDef?.label} yet
+                    </p>
+                    {canEdit && (
+                      <button onClick={() => setShowUpload(true)}
+                        className="mt-2 px-6 py-3 rounded-full text-white text-xs uppercase tracking-widest"
+                        style={{ background: activeFolderDef?.color || '#f97316' }}>
+                        Upload First {tab === 'photo' ? 'Photo' : 'Video'}
+                      </button>
+                    )}
+                  </motion.div>
+                ) : (
+                  <>
+                    <motion.div
+                      variants={stagger} initial="hidden" animate="visible"
+                      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
+                    >
+                      <AnimatePresence>
+                        {visibleProjects.map((p) => (
+                          <ProjectCard key={p.id} project={p}
+                            canEdit={canEdit} dark={dark}
+                            onEdit={setEditing}
+                            onDelete={handleDelete}
+                            onPreview={setPreview}
+                          />
+                        ))}
+                      </AnimatePresence>
+                    </motion.div>
 
-            {hasMore && <LoadMoreSentinel onVisible={loadMore} />}
-            {loadingMore && (
-              <div className="flex justify-center mt-10">
-                <Loader2 size={22} className="animate-spin text-orange-400" />
-              </div>
+                    {hasMore && <LoadMoreSentinel onVisible={loadMore} />}
+                    {loadingMore && (
+                      <div className="flex justify-center mt-10">
+                        <Loader2 size={22} className="animate-spin text-orange-400" />
+                      </div>
+                    )}
+                  </>
+                )}
+              </motion.div>
             )}
-          </>
+          </AnimatePresence>
         )}
 
         {/* Bottom bar */}
@@ -650,7 +936,9 @@ useEffect(() => {
       <AnimatePresence>
         {showUpload && (
           <UploadModal dark={dark} onCreate={handleCreate}
-            onClose={() => setShowUpload(false)} />
+            onClose={() => setShowUpload(false)}
+            defaultFolder={activeFolder}
+          />
         )}
         {editing && (
           <EditModal dark={dark} project={editing}

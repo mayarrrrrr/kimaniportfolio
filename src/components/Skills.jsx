@@ -9,28 +9,28 @@ const Skills = ({ darkMode }) => {
 
   const initialSkills = [
     {
-      title: 'Photography',
+      title: 'Film Direction',
       description: 'Capturing cinematic frames with storytelling composition.',
       tag: 'Still · Frame · Light',
       index: '01',
       color: '#f97316',
     },
     {
-      title: 'Videography',
+      title: 'Cinematography',
       description: 'Creating immersive visuals through motion and atmosphere.',
       tag: 'Motion · Scene · Flow',
       index: '02',
       color: '#fb923c',
     },
     {
-      title: 'Film Direction',
+      title: 'Video Editing',
       description: 'Directing visual narratives with emotional depth.',
       tag: 'Vision · Depth · Emotion',
       index: '03',
       color: '#f59e0b',
     },
     {
-      title: 'Color Grading',
+      title: 'Photography',
       description: 'Crafting cinematic moods through light and tone.',
       tag: 'Tone · Mood · Grade',
       index: '04',
