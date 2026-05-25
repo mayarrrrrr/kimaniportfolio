@@ -34,9 +34,73 @@ const Experience = ({ darkMode }) => {
       ],
     },
 
-   
+    {
+      year: '2022 — 2024',
+      role: 'PR Volunteer',
+      company: 'Kenya Red Cross',
+      description:
+        'Worked within the multimedia department documenting humanitarian projects through photography, videography, and editorial coverage while producing engaging visual content for campaigns and field activities.',
+      tag: 'Coverage · Editing · Humanitarian',
+      color: '#fb923c',
+      type: 'Seasonal',
+      stack: [
+        'Photography',
+        'Videography',
+        'Coverage',
+        'Editing',
+      ],
+    },
 
-   
+    {
+      year: '2022 — Present',
+      role: 'Cinematographer / Video Editor',
+      company: 'Freelance',
+      description:
+        'Directing and editing music videos, cinematic reels, branded visuals, and independent productions with a strong focus on rhythm, atmosphere, color grading, and emotional storytelling.',
+      tag: 'Cinema · Direction · Editing',
+      color: '#f59e0b',
+      type: 'Hybrid',
+      stack: [
+        'Color Grading',
+        'Direction',
+        'Cinematography',
+        'Post Production',
+      ],
+    },
+
+    {
+      year: '2021',
+      role: 'Video Editor Intern',
+      company: 'Kenya Broadcasting Corporation (KBC)',
+      description:
+        'Edited documentaries, feature stories, and television production content at the Electronic Field Production Centre while strengthening post-production and broadcast editing workflows.',
+      tag: 'Broadcast · Documentary · Post',
+      color: '#ea580c',
+      type: 'Internship',
+      stack: [
+        'Broadcast',
+        'Documentaries',
+        'Feature Stories',
+        'TV Editing',
+      ],
+    },
+
+    {
+      year: '2019',
+      role: 'Camera Operator',
+      company: 'Manyatta Film LTD',
+      description:
+        'Handled studio shoots, operated production cameras, and assisted in filming short-form cinematic stories and visual productions.',
+      tag: 'Camera · Studio · Production',
+      color: '#d97706',
+      type: 'Internship',
+      stack: [
+        'Camera Ops',
+        'Studio',
+        'Production',
+        'Filming',
+      ],
+    },
   ];
 
   const isDark = darkMode;

@@ -462,7 +462,7 @@ const Skills = ({ darkMode }) => {
             >
               {[
                 { value: '200+', label: 'Projects' },
-                { value: '4 yrs', label: 'Experience' },
+                { value: '5 yrs', label: 'Experience' },
                 { value: '4K', label: 'Resolution' },
               ].map((stat) => (
                 <div
