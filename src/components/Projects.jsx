@@ -78,7 +78,7 @@ const FolderCard = ({ folder, projects, dark, onClick, index }) => {
       p.tags?.some(t => t.toLowerCase() === folder.key) &&
       (p.cloudinaryId || p.thumbnailUrl || p.url)
     )
-    .slice(0, 3)
+    .slice(0, 1)
     .map(p => p.cloudinaryId ? gridThumb(p.cloudinaryId) : p.thumbnailUrl ?? p.url);
 
   return (
