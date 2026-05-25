@@ -63,199 +63,118 @@ export const FOLDERS = [
   },
 ];
 
-/* ─── Folder row — cinematic ────────────────────────────────────── */
-const FolderRow = ({ folder, projects, dark, onClick, index }) => {
+/* ─── Folder row (cinematic list style) ─────────────────────────── */
+const FolderCard = ({ folder, projects, dark, onClick, index }) => {
   const [hovering, setHovering] = useState(false);
-  const Icon = folder.icon;
+  const Icon  = folder.icon;
 
   const count = projects.filter(p =>
     p.tags?.some(t => t.toLowerCase() === folder.key)
   ).length;
 
-  // up to 4 sample thumbs
+  // collect up to 3 sample thumbnails for the preview strip
   const samples = projects
     .filter(p =>
       p.tags?.some(t => t.toLowerCase() === folder.key) &&
       (p.cloudinaryId || p.thumbnailUrl || p.url)
     )
-    .slice(0, 4)
+    .slice(0, 3)
     .map(p => p.cloudinaryId ? gridThumb(p.cloudinaryId) : p.thumbnailUrl ?? p.url);
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: -60 }}
-      whileInView={{ opacity: 1, x: 0 }}
+      initial={{ opacity: 0, y: 40 }}
+      whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      transition={{ delay: index * 0.12, duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ delay: index * 0.1, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+      whileHover={{ scale: 1.015, x: 6 }}
       onClick={onClick}
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
-      className="relative overflow-hidden cursor-pointer"
+      className="flex items-center justify-between px-6 py-5 rounded-2xl border cursor-pointer transition-all"
       style={{
-        borderTop: `1px solid ${hovering
-          ? folder.color + '40'
-          : dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'}`,
-        transition: 'border-color 0.5s ease',
+        background  : hovering
+          ? dark ? `rgba(255,255,255,0.055)` : `rgba(255,255,255,0.85)`
+          : dark ? 'rgba(255,255,255,0.03)'  : 'rgba(255,255,255,0.6)',
+        borderColor : hovering
+          ? folder.color + '55'
+          : dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
+        backdropFilter: 'blur(20px)',
+        boxShadow: hovering
+          ? `0 0 0 1px ${folder.color}22, 0 12px 40px rgba(0,0,0,0.15)`
+          : 'none',
+        transition: 'all 0.35s ease',
       }}
     >
-      {/* Expanding color wash on hover */}
-      <motion.div
-        animate={{ scaleX: hovering ? 1 : 0, opacity: hovering ? 1 : 0 }}
-        initial={{ scaleX: 0, opacity: 0 }}
-        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-        style={{
-          position: 'absolute', inset: 0,
-          background: `linear-gradient(90deg, ${folder.color}12 0%, transparent 70%)`,
-          transformOrigin: 'left',
-        }}
-      />
+      {/* Left — icon + label */}
+      <div className="flex items-center gap-5">
+        {/* Icon badge */}
+        <motion.div
+          animate={{ scale: hovering ? 1.1 : 1 }}
+          transition={{ duration: 0.3 }}
+          className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+          style={{
+            background: `${folder.color}18`,
+            border    : `1px solid ${folder.color}35`,
+          }}
+        >
+          <Icon size={18} style={{ color: folder.color }} />
+        </motion.div>
 
-      {/* Left accent line that grows on hover */}
-      <motion.div
-        animate={{ scaleY: hovering ? 1 : 0, opacity: hovering ? 1 : 0 }}
-        initial={{ scaleY: 0, opacity: 0 }}
-        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        style={{
-          position: 'absolute', left: 0, top: 0, bottom: 0, width: 2,
-          background: folder.color,
-          transformOrigin: 'top',
-        }}
-      />
-
-      <div className="relative flex items-center justify-between px-8 py-7">
-
-        {/* ── Left block: index + icon + label ── */}
-        <div className="flex items-center gap-7">
-
-          {/* Scene number */}
-          <span
-            className="text-[11px] font-light tabular-nums w-6 text-right flex-shrink-0"
-            style={{
-              color: hovering ? folder.color : dark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.18)',
-              fontFamily: 'Georgia, serif',
-              transition: 'color 0.4s ease',
-            }}
-          >
-            {String(index + 1).padStart(2, '0')}
-          </span>
-
-          {/* Icon */}
-          <motion.div
-            animate={{
-              rotate: hovering ? 8 : 0,
-              scale : hovering ? 1.15 : 1,
-            }}
-            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-            className="flex-shrink-0"
-          >
-            <Icon
-              size={22}
-              style={{
-                color: hovering ? folder.color : dark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.3)',
-                transition: 'color 0.4s ease',
-              }}
-            />
-          </motion.div>
-
-          {/* Label block */}
-          <div>
-            <motion.p
-              animate={{ x: hovering ? 4 : 0 }}
-              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-              className="text-2xl font-black uppercase tracking-tight leading-none"
-              style={{
-                color     : dark ? '#fff' : '#111',
-                fontFamily: 'Georgia, serif',
-                letterSpacing: '-0.01em',
-              }}
-            >
-              {folder.label}
-            </motion.p>
-            <motion.p
-              animate={{ opacity: hovering ? 1 : 0, y: hovering ? 0 : 4 }}
-              transition={{ duration: 0.35, ease: 'easeOut' }}
-              className="text-[11px] uppercase tracking-[0.35em] mt-1"
-              style={{ color: folder.color }}
-            >
-              {folder.desc}
-            </motion.p>
-          </div>
-        </div>
-
-        {/* ── Right block: count + thumbnails + arrow ── */}
-        <div className="flex items-center gap-6 flex-shrink-0">
-
-          {/* Count */}
-          <div className="text-right hidden sm:block">
-            <p
-              className="text-3xl font-black leading-none"
-              style={{
-                color     : hovering ? folder.color : dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)',
-                fontFamily: 'Georgia, serif',
-                transition: 'color 0.4s ease',
-              }}
-            >
-              {String(count).padStart(2, '0')}
-            </p>
-            <p
-              className="text-[9px] uppercase tracking-[0.4em] mt-0.5"
-              style={{ color: dark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.25)' }}
-            >
-              files
-            </p>
-          </div>
-
-          {/* Thumbnail filmstrip */}
-          {/* {samples.length > 0 && (
-            <div className="flex gap-1.5 items-center">
-              {samples.map((src, i) => (
-                <motion.div
-                  key={i}
-                  animate={{
-                    opacity  : hovering ? 1 : 0.25,
-                    y        : hovering ? 0 : 6,
-                    scale    : hovering ? 1 : 0.92,
-                  }}
-                  transition={{
-                    duration: 0.45,
-                    delay   : hovering ? i * 0.06 : (samples.length - i) * 0.04,
-                    ease    : [0.22, 1, 0.36, 1],
-                  }}
-                  className="rounded-lg overflow-hidden flex-shrink-0"
-                  style={{
-                    width : 42,
-                    height: 42,
-                    outline: `1px solid ${folder.color}30`,
-                  }}
-                >
-                   <img src={src} alt="" className="w-full h-full object-cover" /> 
-                </motion.div>
-              ))}
-            </div>
-          )} */}
-
-          {/* Arrow */}
-          <motion.div
-            animate={{
-              x      : hovering ? 0  : -8,
-              opacity: hovering ? 1  : 0,
-              rotate : hovering ? 0  : -15,
-            }}
-            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-            className="text-2xl leading-none flex-shrink-0"
-            style={{ color: folder.color }}
-          >
-            →
-          </motion.div>
+        {/* Text */}
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.4em]"
+            style={{ color: folder.color }}>
+            {count} {count === 1 ? 'item' : 'items'}
+          </p>
+          <p className="text-lg font-bold mt-0.5 uppercase tracking-wide"
+            style={{ color: dark ? '#fff' : '#111', fontFamily: 'Georgia, serif' }}>
+            {folder.label}
+          </p>
+          <p className="text-[11px] mt-0.5"
+            style={{ color: dark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.4)' }}>
+            {folder.desc}
+          </p>
         </div>
       </div>
 
-      {/* Bottom border */}
-      {index === 3 && (
-        <div style={{
-          borderBottom: `1px solid ${dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'}`,
-        }} />
-      )}
+      {/* Right — thumbnail strip + arrow */}
+      <div className="flex items-center gap-4 flex-shrink-0">
+        {/* Thumbnail strip */}
+        {samples.length > 0 && (
+          <div className="flex -space-x-3">
+            {samples.map((src, i) => (
+              <div
+                key={i}
+                className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0"
+                style={{
+                  border  : `2px solid ${dark ? '#111' : '#f0ebe2'}`,
+                  zIndex  : samples.length - i,
+                  opacity : hovering ? 1 : 0.7,
+                  transform: hovering ? `translateX(${i * -2}px)` : 'none',
+                  transition: `all 0.35s ease ${i * 0.04}s`,
+                }}
+              >
+                <img
+                  src={src}
+                  alt=""
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Arrow */}
+        <motion.span
+          animate={{ x: hovering ? 4 : 0, opacity: hovering ? 1 : 0.5 }}
+          transition={{ duration: 0.3 }}
+          className="text-xl"
+          style={{ color: '#f97316' }}
+        >
+          →
+        </motion.span>
+      </div>
     </motion.div>
   );
 };
@@ -845,9 +764,9 @@ const Projects = ({ darkMode }) => {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.35 }}
               >
-                <div className="w-full">
+                <div className="flex flex-col gap-3 max-w-3xl mx-auto w-full">
                   {FOLDERS.map((folder, i) => (
-                    <FolderRow
+                    <FolderCard
                       key={folder.key}
                       folder={folder}
                       projects={projects}
