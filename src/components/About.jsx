@@ -2,7 +2,7 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowRight, Pencil } from 'lucide-react';
 import { useRef, useState } from 'react';
 
-import about from '../assets/heroo.jpeg';
+import about from '../assets/herrooimage.png';
 
 /* ── shared easing ── */
 const ease = [0.22, 1, 0.36, 1];
