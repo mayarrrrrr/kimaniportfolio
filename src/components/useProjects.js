@@ -156,7 +156,23 @@ export const useProjects = (filterType = null) => {
 
   /* ── CREATE photo ─────────────────────────────────────────── */
   const createPhoto = useCallback(async (meta, file, onProgress) => {
-  const compressedFile = await compressImage(file);
+    // URL photo
+  if (!file) {
+    await addDoc(collection(db, 'projects'), {
+      ...meta,
+      type: 'photo',
+      cloudinaryId: null,
+      muxPlaybackId: null,
+      muxAssetId: null,
+      storagePath: null,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+
+    return;
+  }
+  
+    const compressedFile = await compressImage(file);
 
   const { cloudinaryId, url } =
     await uploadToCloudinary(compressedFile, onProgress);
@@ -189,30 +205,37 @@ export const useProjects = (filterType = null) => {
   // ─────────────────────────────────────────────
   // CASE 1: EXTERNAL VIDEO (YouTube / Vimeo)
   // ─────────────────────────────────────────────
-  const MAX_SIZE = 100 * 1024 * 1024;
+//   const MAX_SIZE = 100 * 1024 * 1024;
 
-if (file.size > MAX_SIZE) {
-  throw new Error('Video must be under 100MB');
+// if (file.size > MAX_SIZE) {
+//   throw new Error('Video must be under 100MB');
+// }
+
+// ─────────────────────────────────────────────
+// CASE 1: EXTERNAL VIDEO (YouTube / Vimeo)
+// ─────────────────────────────────────────────
+if (!file) {
+  await addDoc(collection(db, 'projects'), {
+    ...meta,
+    type: 'video',
+    cloudinaryId: null,
+    storagePath: null,
+    muxPlaybackId: null,
+    muxAssetId: null,
+    status: 'ready',
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+
+  return;
 }
 
+// ─────────────────────────────────────────────
+// CASE 2: FILE VIDEO
+// ─────────────────────────────────────────────
 if (file.type !== 'video/mp4') {
   throw new Error('Only MP4 videos are allowed');
 }
-
-  if (!file) {
-    await addDoc(collection(db, 'projects'), {
-      ...meta,
-      type: 'video',
-      cloudinaryId: null,
-      storagePath: null,
-      muxPlaybackId: null,
-      muxAssetId: null,
-      status: 'ready', // instantly ready
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
-    return;
-  }
 
   // ─────────────────────────────────────────────
   // CASE 2: FILE UPLOAD VIDEO
