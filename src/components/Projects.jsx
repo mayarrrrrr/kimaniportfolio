@@ -4,7 +4,7 @@ import {
   Plus, Pencil, Trash2, X,
   Image, Film, Star, Play,
   Loader2, AlertCircle, FolderOpen, ChevronLeft,
-  Heart, Bird, Home, Calendar,
+  Heart, Bird, Home, Calendar,Landmark
 } from 'lucide-react';
 
 import { useProjects }       from './useProjects';
@@ -37,6 +37,14 @@ export const FOLDERS = [
     glow  : 'rgba(239,68,68,0.25)',
     desc  : 'Stories of people & communities',
   },
+  {
+  key   : 'culture',
+  label : 'Culture',
+  icon  : Landmark,
+  color : '#f59e0b',
+  glow  : 'rgba(245,158,11,0.25)',
+  desc  : 'Art, traditions & cultural stories',
+},
   {
     key   : 'wildlife',
     label : 'Wildlife',

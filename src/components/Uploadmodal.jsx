@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   X, Star, Upload, Image, Film, Loader2, Link, FileUp,
-  Heart, Bird, Home, Calendar,
+  Heart, Bird, Home, Calendar, Landmark
 } from 'lucide-react';
 
 const ease = [0.22, 1, 0.36, 1];
@@ -10,9 +10,11 @@ const ease = [0.22, 1, 0.36, 1];
 /* ── Folder definitions (keep in sync with Projects.jsx) ─────────── */
 export const Folders = [
   { key: 'humanitarian', label: 'Humanitarian', icon: Heart,    color: '#ef4444' },
+  { key: 'culture',       label: 'Culture',       icon: Landmark, color: '#f59e0b' },
   { key: 'wildlife',     label: 'Wildlife',     icon: Bird,     color: '#22c55e' },
   { key: 'real estate',  label: 'Real Estate',  icon: Home,     color: '#3b82f6' },
   { key: 'events',       label: 'Events',       icon: Calendar, color: '#a855f7' },
+  
 ];
 
 /* ── URL helpers ─────────────────────────────────────────────────── */
