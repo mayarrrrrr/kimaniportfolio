@@ -13,7 +13,7 @@ import { useState } from "react";
 
 import hero from "../assets/kelvin.jpeg";
 import CV from "../assets/Kelvinkimani.pdf";
-import demoVideo from "../assets/showreeel.mp4";
+import demoVideo from "../assets/herovideo.mp4";
 
 const Hero = () => {
   const [darkMode, setDarkMode] = useState(true);
