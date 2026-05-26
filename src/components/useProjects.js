@@ -10,12 +10,29 @@ import {
   ref, uploadBytesResumable, getDownloadURL, deleteObject,
 } from 'firebase/storage';
 import { db, storage } from '../firebase';
+import imageCompression from 'browser-image-compression';
+
 
 const PAGE_SIZE   = 12;
 const CLOUD       = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
 const UPLOAD_PRESET = 'portflio_photos'; // your unsigned preset name
 
 /* ─── upload photo to Cloudinary ─────────────────────────────── */
+const compressImage = async (file) => {
+  const options = {
+    maxSizeMB: 1,
+    maxWidthOrHeight: 1920,
+    useWebWorker: true,
+  };
+
+  try {
+    return await imageCompression(file, options);
+  } catch (error) {
+    console.error('Compression failed:', error);
+    return file;
+  }
+};
+
 const uploadToCloudinary = (file, onProgress) =>
   new Promise((resolve, reject) => {
     const form = new FormData();
@@ -139,19 +156,23 @@ export const useProjects = (filterType = null) => {
 
   /* ── CREATE photo ─────────────────────────────────────────── */
   const createPhoto = useCallback(async (meta, file, onProgress) => {
-    const { cloudinaryId, url } = await uploadToCloudinary(file, onProgress);
-    await addDoc(collection(db, 'projects'), {
-      ...meta,
-      type           : 'photo',
-      cloudinaryId,
-      url,            // fallback
-      muxPlaybackId  : null,
-      muxAssetId     : null,
-      storagePath    : null,
-      createdAt      : serverTimestamp(),
-      updatedAt      : serverTimestamp(),
-    });
-  }, []);
+  const compressedFile = await compressImage(file);
+
+  const { cloudinaryId, url } =
+    await uploadToCloudinary(compressedFile, onProgress);
+
+  await addDoc(collection(db, 'projects'), {
+    ...meta,
+    type: 'photo',
+    cloudinaryId,
+    url,
+    muxPlaybackId: null,
+    muxAssetId: null,
+    storagePath: null,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+}, []);
 
   /* ── CREATE video ─────────────────────────────────────────── */
   /**
@@ -168,6 +189,16 @@ export const useProjects = (filterType = null) => {
   // ─────────────────────────────────────────────
   // CASE 1: EXTERNAL VIDEO (YouTube / Vimeo)
   // ─────────────────────────────────────────────
+  const MAX_SIZE = 100 * 1024 * 1024;
+
+if (file.size > MAX_SIZE) {
+  throw new Error('Video must be under 100MB');
+}
+
+if (file.type !== 'video/mp4') {
+  throw new Error('Only MP4 videos are allowed');
+}
+
   if (!file) {
     await addDoc(collection(db, 'projects'), {
       ...meta,
